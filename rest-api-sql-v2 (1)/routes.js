@@ -45,7 +45,7 @@ router.post('/users', asyncHandler(async (req, res) => {
   }
 }));
 
-//Route that returns list of courses
+// Route that returns list of courses
 router.get('/courses', asyncHandler(async (req, res) => {
   const courses = await Course.findAll();
   const users = await User.findAll();
@@ -79,6 +79,21 @@ router.get('/courses/:id', asyncHandler(async (req, res) => {
   //     //user: courses[i].associate
   //   })
   //}
+}));
+
+// Route creates a course
+router.post('/courses', asyncHandler(async (req, res) => {
+  try {
+    await Course.create(req.body);
+    res.status(201).json({ "message": "Course successfully created." });
+  } catch (error) {
+    if (error.name === 'SequelizeValidationError') {
+      const errors = error.errors.map(err => err.message);
+      res.status(400).json({ errors });   
+    } else {
+      throw error;
+    }
+  }
 }));
 
 module.exports = router;

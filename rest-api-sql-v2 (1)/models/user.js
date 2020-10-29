@@ -76,8 +76,16 @@ module.exports = (sequelize) => {
   User.associate = (models) => {
     User.hasMany(models.Course, { 
       foreignKey: {
-        feildName: 'UserId', 
-        allowNull: false,
+        feildName: 'userId' 
+        // allowNull: false,
+        // validate: {
+        //   notNull: {
+        //     msg: 'An instructor is required'
+        //   },
+        //   notEmpty: {
+        //     msg: 'Please Provide an instructor'
+        //   }
+        // }
       },
     });
   };

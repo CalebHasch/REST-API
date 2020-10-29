@@ -1,6 +1,5 @@
 'use strict'
 const { Model, DataTypes } = require('sequelize');
-const { sequelize } = require('.');
 
 module.exports = (sequelize) => {
   class Course extends Model {}
@@ -11,16 +10,36 @@ module.exports = (sequelize) => {
       autoIncrement: true,
     },
     title: {
-      type: DataTypes.STRING
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'A title is required'
+        },
+        notEmpty: {
+          msg: 'Please Provide a title'
+        }
+      }
     },
     description: {
-      type: DataTypes.TEXT
+      type: DataTypes.TEXT,
+      allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'A description is required'
+        },
+        notEmpty: {
+          msg: 'Please Provide a description'
+        }
+      }
     },
     estimatedTime: {
-      type: DataTypes.STRING
+      type: DataTypes.STRING,
+      allowNull: true
     },
     materialsNeeded: {
-      type: DataTypes.STRING
+      type: DataTypes.STRING,
+      allowNull: true
     }
     // UserId: {
     //   type: DataTypes.INTEGER,
@@ -34,8 +53,16 @@ module.exports = (sequelize) => {
   Course.associate = (models) => {
     Course.belongsTo(models.User, { 
       foreignKey: {
-        feildName: 'UserId', 
-        allowNull: false,
+        feildName: 'userId', 
+        // allowNull: false,
+        // validate: {
+        //   notNull: {
+        //     msg: 'An instructor is required'
+        //   },
+        //   notEmpty: {
+        //     msg: 'Please Provide an instructor'
+        //   }
+        // }
       },
     });
   };
