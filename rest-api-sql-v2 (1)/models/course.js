@@ -22,10 +22,22 @@ module.exports = (sequelize) => {
     materialsNeeded: {
       type: DataTypes.STRING
     }
+    // UserId: {
+    //   type: DataTypes.INTEGER,
+    //   references: {
+    //     model: "user",
+    //     key: "id"
+    //   }
+    // }
   }, { sequelize });
 
   Course.associate = (models) => {
-    Course.belongsTo(models.User, { foreignKey: 'UserId' });
+    Course.belongsTo(models.User, { 
+      foreignKey: {
+        feildName: 'UserId', 
+        allowNull: false,
+      },
+    });
   };
 
   return Course

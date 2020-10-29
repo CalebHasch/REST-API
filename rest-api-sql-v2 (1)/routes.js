@@ -1,8 +1,13 @@
 'use strict';
 
 const express = require('express');
+//const { json } = require('sequelize/types');
 //const { authenticateUser } = require('./auth-user');
-const { User, Course } = require('./models');
+const { User } = require('./models');
+const { Course } = require('./models');
+
+// const Course = require('./models/course');
+// const User = require('./models/user');
 
 const router = express.Router();
 
@@ -17,18 +22,63 @@ function asyncHandler(cb) {
   }
 }
 
-//router.use('/api');
-
 // Route that returns the current authenticated user.
-// router.get('/users', asyncHandler(async (req, res) => {
-//   onst user = req.currentUser;
-//   console.log('hi');
-//   res.json({
-//     name: user.firstName
-//   });
-// }));
+router.get('/users/:id', asyncHandler(async (req, res) => {
+  const user = await User.findByPk(req.params.id);
+  res.json({
+    name: user.firstName
+  });
+}));
 
-// Route that returns list of courses
+// Route that creates user
+router.post('/users', asyncHandler(async (req, res) => {
+  try {
+    await User.create(req.body);
+    res.status(201).json({ "message": "Account successfully created." });
+  } catch (error) {
+    if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
+      const errors = error.errors.map(err => err.message);
+      res.status(400).json({ errors });   
+    } else {
+      throw error;
+    }
+  }
+}));
+
+//Route that returns list of courses
 router.get('/courses', asyncHandler(async (req, res) => {
-  console.log('courses');
-}))
+  const courses = await Course.findAll();
+  const users = await User.findAll();
+  
+  res.json(courses);
+  // for(let i = 0; i < courses.length; i++) {
+  //   res.json({
+  //     course: courses[i],
+  //     // title: courses[i].title,
+  //     // description: courses[i].description,
+  //     // estimatedTime: courses[i].estimatedTime,
+  //     // materialsNeeded: courses[i].materialsNeeded
+  //     //user: courses[i].associate
+  //   })
+  //}
+}));
+
+// Route returns specific course
+router.get('/courses/:id', asyncHandler(async (req, res) => {
+  const course = await Course.findByPk(req.params.id)
+  const users = await User.findAll();
+  
+  res.json(course);
+  // for(let i = 0; i < courses.length; i++) {
+  //   res.json({
+  //     course: courses[i],
+  //     // title: courses[i].title,
+  //     // description: courses[i].description,
+  //     // estimatedTime: courses[i].estimatedTime,
+  //     // materialsNeeded: courses[i].materialsNeeded
+  //     //user: courses[i].associate
+  //   })
+  //}
+}));
+
+module.exports = router;
