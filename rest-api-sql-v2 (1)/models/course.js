@@ -53,16 +53,16 @@ module.exports = (sequelize) => {
   Course.associate = (models) => {
     Course.belongsTo(models.User, { 
       foreignKey: {
-        feildName: 'userId', 
-        // allowNull: false,
-        // validate: {
-        //   notNull: {
-        //     msg: 'An instructor is required'
-        //   },
-        //   notEmpty: {
-        //     msg: 'Please Provide an instructor'
-        //   }
-        // }
+        fieldName: 'userId', 
+        allowNull: false,
+        validate: {
+          notNull: {
+            msg: 'An instructor is required'
+          },
+          notEmpty: {
+            msg: 'Please Provide an instructor'
+          }
+        }
       },
     });
   };

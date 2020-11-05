@@ -1,6 +1,6 @@
 'use strict'
 const { Model, DataTypes } = require('sequelize');
-const bcrypt = require('bcryptjs');
+
 
 module.exports = (sequelize) => {
   class User extends Model {}
@@ -61,31 +61,22 @@ module.exports = (sequelize) => {
         }
       }
     }
-    // confirmedPassword: {
-    //   type: DataTypes.STRING,
-    //   allowNull: false,
-    //   set(val) {
-    //     if ( val === this.password ) {
-    //       const hashedPassword = bcrypt.hashSync(val, 10);
-    //       this.setDataValue('confirmedPassword', hashedPassword);
-    //     }
-    //   }
-    // }
+
   }, { sequelize });
 
   User.associate = (models) => {
     User.hasMany(models.Course, { 
       foreignKey: {
-        feildName: 'userId' 
-        // allowNull: false,
-        // validate: {
-        //   notNull: {
-        //     msg: 'An instructor is required'
-        //   },
-        //   notEmpty: {
-        //     msg: 'Please Provide an instructor'
-        //   }
-        // }
+        fieldName: 'userId', 
+        allowNull: false,
+        validate: {
+          notNull: {
+            msg: 'An instructor is required'
+          },
+          notEmpty: {
+            msg: 'Please Provide an instructor'
+          }
+        }
       },
     });
   };

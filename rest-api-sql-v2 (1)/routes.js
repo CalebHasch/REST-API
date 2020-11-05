@@ -1,13 +1,12 @@
 'use strict';
 
 const express = require('express');
-//const { json } = require('sequelize/types');
-//const { authenticateUser } = require('./auth-user');
+const { authenticateUser } = require('./auth-user');
 const { User } = require('./models');
 const { Course } = require('./models');
 
-// const Course = require('./models/course');
-// const User = require('./models/user');
+const bcrypt = require('bcryptjs');
+const course = require('./models/course');
 
 const router = express.Router();
 
@@ -23,17 +22,27 @@ function asyncHandler(cb) {
 }
 
 // Route that returns the current authenticated user.
-router.get('/users/:id', asyncHandler(async (req, res) => {
-  const user = await User.findByPk(req.params.id);
+router.get('/users', authenticateUser, asyncHandler(async (req, res) => {
+  const user = req.currentUser;
+
   res.json({
-    name: user.firstName
+    id: user.id,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.emailAddress
   });
 }));
 
-// Route that creates user
+// Route that creates a user
 router.post('/users', asyncHandler(async (req, res) => {
   try {
-    await User.create(req.body);
+    let user = req.body;
+    
+    if (user.password) {
+      user.password = bcrypt.hashSync(user.password);
+    }
+    
+    await User.create(user);
     res.status(201).json({ "message": "Account successfully created." });
   } catch (error) {
     if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
@@ -49,40 +58,72 @@ router.post('/users', asyncHandler(async (req, res) => {
 router.get('/courses', asyncHandler(async (req, res) => {
   const courses = await Course.findAll();
   const users = await User.findAll();
+  let coursesArr = [];
   
-  res.json(courses);
-  // for(let i = 0; i < courses.length; i++) {
-  //   res.json({
-  //     course: courses[i],
-  //     // title: courses[i].title,
-  //     // description: courses[i].description,
-  //     // estimatedTime: courses[i].estimatedTime,
-  //     // materialsNeeded: courses[i].materialsNeeded
-  //     //user: courses[i].associate
-  //   })
-  //}
+  for(let i = 0; i < courses.length; i++) {
+    let userId = courses[i].userId - 1;
+    let courseObj = {
+      courseId: courses[i].id,
+      title: courses[i].title,
+      description: courses[i].description
+    };
+
+    let userObj = {
+      id: users[userId].id,
+      firstName: users[userId].firstName,
+      lastName: users[userId].lastName,
+      email: users[userId].emailAddress
+    };
+ 
+    if (courses[i].estimatedTime) {
+      courseObj.estimatedTime = courses[i].estimatedTime;
+    }
+    if (courses[i].materialsNeeded) {
+      courseObj.materialsNeeded = courses[i].materialsNeeded;
+    }
+    courseObj.userId = courses[i].userId;
+
+    coursesArr.push(courseObj);
+    coursesArr.push(userObj);
+  }
+  res.json(coursesArr);
 }));
 
 // Route returns specific course
 router.get('/courses/:id', asyncHandler(async (req, res) => {
-  const course = await Course.findByPk(req.params.id)
-  const users = await User.findAll();
-  
-  res.json(course);
-  // for(let i = 0; i < courses.length; i++) {
-  //   res.json({
-  //     course: courses[i],
-  //     // title: courses[i].title,
-  //     // description: courses[i].description,
-  //     // estimatedTime: courses[i].estimatedTime,
-  //     // materialsNeeded: courses[i].materialsNeeded
-  //     //user: courses[i].associate
-  //   })
-  //}
+  const course = await Course.findByPk(req.params.id);
+  const user = await User.findByPk(course.userId);
+  let courseArr = [];
+
+  let courseObj = {
+    courseId: course.id,
+    title: course.title,
+    description: course.description
+  };
+
+  let userObj = {
+    id: user.id,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.emailAddress
+  };
+
+  if (course.estimatedTime) {
+    courseObj.estimatedTime = course.estimatedTime;
+  }
+  if (course.materialsNeeded) {
+    courseObj.materialsNeeded = course.materialsNeeded;
+  }
+  courseObj.userId = course.userId;
+
+  courseArr.push(courseObj);
+  courseArr.push(userObj);
+
+  res.json(courseArr);
 }));
 
 // Route creates a course
-router.post('/courses', asyncHandler(async (req, res) => {
+router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
   try {
     await Course.create(req.body);
     res.status(201).json({ "message": "Course successfully created." });
@@ -93,6 +134,48 @@ router.post('/courses', asyncHandler(async (req, res) => {
     } else {
       throw error;
     }
+  }
+}));
+
+// Route that updates a course
+router.put('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
+  const course = await Course.findByPk(req.params.id);
+  const user = req.currentUser;
+
+  try {
+    if (course) {
+      if (user.id === course.userId) {
+        await course.update(req.body);
+        res.sendStatus(204);
+      } else {
+        res.sendStatus(403);
+      }
+    } else {
+      res.sendStatus(404);
+    }
+  } catch (error) {
+    if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
+      const errors = error.errors.map(err => err.message);
+      res.status(400).json({ errors });     
+    }
+  }
+}));
+
+// Route that deletes a course
+router.delete('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
+  const course = await Course.findByPk(req.params.id);
+  const user = req.currentUser;
+
+  console.log(user.id);
+  if (course) {
+    if (user.id === course.userId) {
+      await course.destroy();
+      res.sendStatus(204);
+    } else {
+      res.sendStatus(403);
+    }
+  } else {
+    res.sendStatus(404);
   }
 }));
 
