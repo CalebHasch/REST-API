@@ -43,7 +43,7 @@ router.post('/users', asyncHandler(async (req, res) => {
     }
     
     await User.create(user);
-    res.status(201).json({ "message": "Account successfully created." });
+    res.status(201).location('/').end();
   } catch (error) {
     if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
       const errors = error.errors.map(err => err.message);
@@ -123,10 +123,10 @@ router.get('/courses/:id', asyncHandler(async (req, res) => {
 }));
 
 // Route creates a course
-router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
+router.post('/courses', authenticateUser, asyncHandler(async (req, res, next) => {
   try {
-    await Course.create(req.body);
-    res.status(201).json({ "message": "Course successfully created." });
+    const course = await Course.create(req.body);
+    res.status(201).location(`/courses/${course.id}`).end();
   } catch (error) {
     if (error.name === 'SequelizeValidationError') {
       const errors = error.errors.map(err => err.message);
